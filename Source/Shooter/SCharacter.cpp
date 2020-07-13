@@ -101,7 +101,7 @@ void ASCharacter::BeginZoom()
 	
 	if (CurrentWeapon && CurrentWeapon->bHasAltFire)
 	{
-		BeginFire();
+		BeginAltFire();
 		
 	}else
 	{
@@ -130,6 +130,14 @@ void ASCharacter::BeginFire()
 	if (CurrentWeapon && !CurrentWeapon->bIsReloading)
 	{
 		CurrentWeapon->StartFire();
+	}
+}
+
+void ASCharacter::BeginAltFire()
+{
+	if (CurrentWeapon && !CurrentWeapon->bIsReloading)
+	{
+		CurrentWeapon->AltFire();
 	}
 }
 

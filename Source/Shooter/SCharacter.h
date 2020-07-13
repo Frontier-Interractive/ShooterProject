@@ -56,6 +56,7 @@ protected:
 	void EndZoom();
 
 	void BeginFire();
+	void BeginAltFire();
 	void EndFire();
 
 	void ReloadWeapon();

@@ -38,6 +38,11 @@ void ASProjectileWeapon::AltFire()
 
 			Projectile = GetWorld()->SpawnActor<AGLProjectile>(BounceProjectileActor, MuzzleLocation, EyeRotation, SpawnParams);
 
+			if (Projectile)
+			{
+				Projectile->SetOwner(this);
+			}
+			
 			--RoundsChambered;
 		}else
 		{
@@ -65,6 +70,11 @@ void ASProjectileWeapon::Fire()
 			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 			Projectile = GetWorld()->SpawnActor<AGLProjectile>(ProjectileActor, MuzzleLocation, EyeRotation, SpawnParams);
+
+			if (Projectile)
+			{
+				Projectile->SetOwner(this);
+			}
 
 			--RoundsChambered;
 		}else

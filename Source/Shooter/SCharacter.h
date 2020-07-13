@@ -10,6 +10,7 @@
 class UCameraComponent;
 class USpringArmComponent;
 class ASWeapon;
+class UHealthComponent;
 
 struct Timer
 {
@@ -69,6 +70,9 @@ protected:
 	
 	void StopDash();
 
+	UFUNCTION()
+	void OnHealthChanged(UHealthComponent * HealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UCameraComponent* CameraComp;
 
@@ -97,7 +101,7 @@ protected:
 
 	int CurrentWeaponIndex;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
 	ASWeapon* CurrentWeapon;
 
 	bool bIsSwappingWeapons;
@@ -108,6 +112,12 @@ protected:
 	float DashForce;
 
 	PlayerDirection Direction;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
+	UHealthComponent * HealthComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
+	bool bIsAlive;
 
 public:	
 	// Called every frame

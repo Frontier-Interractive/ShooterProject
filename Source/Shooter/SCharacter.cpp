@@ -14,6 +14,8 @@
 #include "Math/UnrealMathUtility.h"
 #include "TimerManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "HealthComponent.h"
+#include "Components/CapsuleComponent.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -28,6 +30,8 @@ ASCharacter::ASCharacter()
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComp->SetupAttachment(SpringArmComp);
 
+	HealthComp = CreateDefaultSubobject<UHealthComponent>(TEXT("Health Component"));
+
 	GetMovementComponent()->GetNavAgentPropertiesRef().bCanCrouch = true;
 	
 	ZoomedFOV = 65.0f;
@@ -41,6 +45,8 @@ ASCharacter::ASCharacter()
 	DashForce = 20000;
 
 	Direction = PlayerDirection::EDefault;
+
+	bIsAlive = true;
 }
 
 // Called when the game starts or when spawned
@@ -51,6 +57,8 @@ void ASCharacter::BeginPlay()
 	defaultFOV = CameraComp->FieldOfView;
 	
 	SpawnWeapon(StarterWeaponClass);
+
+	HealthComp->OnHealthChanged.AddDynamic(this, &ASCharacter::OnHealthChanged);
 }
 
 // Called every frame
@@ -219,6 +227,24 @@ void ASCharacter::StopDash()
 {
 	GetCharacterMovement()->StopMovementImmediately();
 	GetWorldTimerManager().ClearTimer(TimerHandle_Dash);
+}
+
+void ASCharacter::OnHealthChanged(UHealthComponent* HealthComp, float Health, float HealthDelta,
+	const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+{
+	if (Health <= 0.0f && bIsAlive)
+	{
+		//Death!
+		bIsAlive = false;
+		
+		GetMovementComponent()->StopMovementImmediately();
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		DetachFromControllerPendingDestroy();
+
+		SetLifeSpan(5.0f);
+
+	}
 }
 
 // Called to bind functionality to input

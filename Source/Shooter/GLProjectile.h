@@ -28,6 +28,15 @@ protected:
 	TSubclassOf<UDamageType> DamageType;
 
 	FTimerHandle TimerHandle_Explosion;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectiles")
+	int BaseDamage;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectiles")
+	int MinimumDamage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectiles", meta = (ClampMin = 0.1, ClampMax = 1))
+	float DamageFalloff;
 
 public:	
 	// Called every frame

@@ -11,6 +11,20 @@ class UParticleSystem;
 class USkeletalMeshComponent;
 class UCameraShake;
 
+USTRUCT()
+struct FHitScanTrace
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY()
+	TEnumAsByte<EPhysicalSurface> SurfaceType;
+
+	UPROPERTY()
+	FVector_NetQuantize TraceEnd;
+};
+
 UCLASS()
 class SHOOTER_API ASWeapon : public AActor
 {
@@ -28,6 +42,9 @@ protected:
 	USkeletalMeshComponent* SkeletalMeshComp;
 	
 	virtual void Fire();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerFire();
 	
 	virtual void ReloadWeapon();
 	
@@ -44,6 +61,8 @@ public:
 protected:
 
 	void PlayFiringEffects(FVector TracerEndPoint) const;
+	
+	void PlayImpactEffects(EPhysicalSurface SurfaceType, FVector ImpactPoint) const;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	TSubclassOf<UDamageType> DamageType;
@@ -92,13 +111,24 @@ protected:
 	
 	FTimerHandle TimerHandle_Reload;
 
+	UPROPERTY(ReplicatedUsing=OnRep_HitScanTrace)
+	FHitScanTrace HitScaneTrace;
+
+	UFUNCTION()
+	void OnRep_HitScanTrace();
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	bool bHasAltFire;
 
 	bool bIsReloading;
+
+	int GetMaxAmmo() {return RoundsReserves; };
+	int GetAmmoRemaining() {return RoundsChambered; };
 	
 };

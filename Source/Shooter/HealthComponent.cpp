@@ -3,6 +3,7 @@
 
 #include "HealthComponent.h"
 #include "GameFramework/Actor.h"
+#include "UnrealNetwork.h"
 
 // Sets default values for this component's properties
 UHealthComponent::UHealthComponent()
@@ -11,8 +12,7 @@ UHealthComponent::UHealthComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-	DefaultHealth = 1000;
-	Health = DefaultHealth;
+	SetIsReplicated(true);
 }
 
 
@@ -20,14 +20,21 @@ UHealthComponent::UHealthComponent()
 void UHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-
-	AActor* MyOwner = GetOwner();
-
-	if (MyOwner)
+	
+	Health = DefaultHealth > 0 ? DefaultHealth : DefaultHealth = 500;
+	
+	//Only hook if sever
+	if (GetOwnerRole() == ROLE_Authority)
 	{
-		MyOwner->OnTakeAnyDamage.AddDynamic(this, &UHealthComponent::HandleTakeAnyDamage);
+		AActor* MyOwner = GetOwner();
+
+		if (MyOwner)
+		{
+			MyOwner->OnTakeAnyDamage.AddDynamic(this, &UHealthComponent::HandleTakeAnyDamage);
+		}
 	}
+
+	
 }
 
 void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
@@ -54,3 +61,11 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	// ...
 }
 
+
+void UHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UHealthComponent, Health);
+	
+}

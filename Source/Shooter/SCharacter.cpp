@@ -15,6 +15,7 @@
 #include "TimerManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "HealthComponent.h"
+#include "UnrealNetwork.h"
 #include "Components/CapsuleComponent.h"
 
 // Sets default values
@@ -53,12 +54,14 @@ ASCharacter::ASCharacter()
 void ASCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
 	defaultFOV = CameraComp->FieldOfView;
 	
-	SpawnWeapon(StarterWeaponClass);
+	if (Role == ROLE_Authority)
+	{
+		SpawnWeapon(StarterWeaponClass);
 
-	HealthComp->OnHealthChanged.AddDynamic(this, &ASCharacter::OnHealthChanged);
+		HealthComp->OnHealthChanged.AddDynamic(this, &ASCharacter::OnHealthChanged);
+	}
 }
 
 // Called every frame
@@ -78,20 +81,27 @@ void ASCharacter::Tick(float DeltaTime)
 		SpawnWeapon(Weapons[CurrentWeaponIndex < 0 ? CurrentWeaponIndex = Weapons.Num()-1 : 
 					CurrentWeaponIndex>Weapons.Num()-1 ? CurrentWeaponIndex = 0 : CurrentWeaponIndex]);
 	}
+
+	if (CurrentWeapon)
+	{
+		UpdateHud(HealthComp->GetHealth(), HealthComp->GetDefaultHealth(), 
+					CurrentWeapon->GetMaxAmmo(), CurrentWeapon->GetAmmoRemaining());
+	}
+	
 }
 
 void ASCharacter::MoveForward(float value)
 {
 	Direction = value == 1 ? PlayerDirection::EForward :
 	value == -1 ? PlayerDirection::EBack : PlayerDirection::EDefault;
-	AddMovementInput(GetActorForwardVector() * value);
+	AddMovementInput(GetActorForwardVector() * (bIsAlive ? value : value = 0));
 }
 
 void ASCharacter::MoveRight(float value)
 {
 	Direction = value == 1 ? PlayerDirection::ERight :
 	value == -1 ? PlayerDirection::ELeft :  PlayerDirection::EDefault;
-	AddMovementInput(GetActorRightVector() * value);
+	AddMovementInput(GetActorRightVector() * (bIsAlive ? value : value = 0));
 }
 
 void ASCharacter::BeginCrouch()
@@ -216,8 +226,6 @@ void ASCharacter::StartDash()
 	default:;
 	}
 
-	
-;	
 	LaunchCharacter(Vel, false, false);
 
 	GetWorldTimerManager().SetTimer(TimerHandle_Dash, this, &ASCharacter::StopDash, 0.015, false);
@@ -236,13 +244,19 @@ void ASCharacter::OnHealthChanged(UHealthComponent* HealthComp, float Health, fl
 	{
 		//Death!
 		bIsAlive = false;
+
+		if (CurrentWeapon)
+		{
+			UpdateHud(HealthComp->GetHealth(), HealthComp->GetDefaultHealth(), 
+						CurrentWeapon->GetMaxAmmo(), CurrentWeapon->GetAmmoRemaining());
+		}
 		
 		GetMovementComponent()->StopMovementImmediately();
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-		DetachFromControllerPendingDestroy();
-
-		SetLifeSpan(5.0f);
+		GetWorldTimerManager().SetTimer(TimerHandle_Kill, this, &APawn::DetachFromControllerPendingDestroy, 0.1, false);
+		
+		SetLifeSpan(3.0f);
 
 	}
 }
@@ -285,3 +299,11 @@ FVector ASCharacter::GetPawnViewLocation() const
 	return Super::GetPawnViewLocation();
 }
 
+void ASCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ASCharacter, CurrentWeapon);
+	DOREPLIFETIME(ASCharacter, bIsAlive);
+	
+}

@@ -11,6 +11,7 @@
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Shooter.h"
 #include "TimerManager.h"
+#include "UnrealNetwork.h"
 
 // Sets default values
 ASWeapon::ASWeapon()
@@ -18,6 +19,11 @@ ASWeapon::ASWeapon()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	SkeletalMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh Comp"));
+
+	SetReplicates(true);
+
+	NetUpdateFrequency = 66.0f;
+	MinNetUpdateFrequency = 33.0f;
 
 	MuzzleSocketName = "MuzzleSocket";
 	TracerTargetName = "BeamEnd";
@@ -44,6 +50,11 @@ void ASWeapon::BeginPlay()
 
 void ASWeapon::Fire()
 {
+	if (Role < ROLE_Authority)
+	{
+		ServerFire();
+	}
+	
 	AActor* MyOwner = GetOwner();
 
 	if (MyOwner)
@@ -64,7 +75,8 @@ void ASWeapon::Fire()
 			QuerryParams.bReturnPhysicalMaterial = true;
 
 			FVector TracerEndPoint = TraceEnd;
-
+			EPhysicalSurface SurfaceType = EPhysicalSurface::SurfaceType_Default;
+			
 			FHitResult Hit;
 			if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QuerryParams))
 			{
@@ -73,42 +85,34 @@ void ASWeapon::Fire()
 
 				EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
 
-				UParticleSystem * SelectedEffect = nullptr;
-
 				float Damage = BaseDamage;
 				
-				switch (SurfaceType)
+				if (SurfaceType == SURFACE_FLESHVULNERABLE)
 				{
-		
-				case SURFACE_FLESHDEFAULT:
-					SelectedEffect = DefaultImpactEffect;
-					break;
-					
-				case SURFACE_FLESHVULNERABLE:
-					SelectedEffect = VulnerableImpactEffect;
-					Damage *= 2;
-					break;
-					
-				default:
-					SelectedEffect = DefaultImpactEffect;
-				}
-
-				if (SelectedEffect)
-				{
-					UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+					Damage *=4; 
 				}
 				
-				UGameplayStatics::ApplyPointDamage(HitActor, Damage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
+				UGameplayStatics::ApplyPointDamage(HitActor, Damage, ShotDirection, Hit, 
+						MyOwner->GetInstigatorController(), this, DamageType);
+				
 				TracerEndPoint = Hit.ImpactPoint;
+				HitScaneTrace.SurfaceType = SurfaceType;
+
+				PlayImpactEffects(SurfaceType, Hit.ImpactPoint);
 			}
 			
-		
-
 			//DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::Red, false, 1, 0, 1);
 			PlayFiringEffects(TracerEndPoint);
 
+			if (Role == ROLE_Authority)
+			{
+				HitScaneTrace.TraceEnd = TracerEndPoint;
+				HitScaneTrace.SurfaceType = SurfaceType;
+			}
+			
 			LastTimeFired = GetWorld()->TimeSeconds;
 			--RoundsChambered;
+
 		}else
 		{
 			Reload();
@@ -116,6 +120,16 @@ void ASWeapon::Fire()
 
 		
 	}
+}
+
+void ASWeapon::ServerFire_Implementation()
+{
+	Fire();
+}
+
+bool ASWeapon::ServerFire_Validate()
+{
+	return true;
 }
 
 void ASWeapon::ReloadWeapon()
@@ -187,9 +201,55 @@ void ASWeapon::PlayFiringEffects(FVector TracerEndPoint) const
 	}
 }
 
+void ASWeapon::PlayImpactEffects(EPhysicalSurface SurfaceType, FVector ImpactPoint) const
+{
+	
+	UParticleSystem * SelectedEffect = nullptr;
+	
+	switch (SurfaceType)
+	{
+
+	case SURFACE_FLESHDEFAULT:
+		SelectedEffect = DefaultImpactEffect;
+		break;
+		
+	case SURFACE_FLESHVULNERABLE:
+		SelectedEffect = VulnerableImpactEffect;
+		break;
+		
+	default:
+		SelectedEffect = DefaultImpactEffect;
+	}
+
+	if (SelectedEffect)
+	{
+		FVector ShotDir = ImpactPoint - SkeletalMeshComp->GetSocketLocation(MuzzleSocketName) ;
+		ShotDir.Normalize();
+		
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, ImpactPoint, ShotDir.Rotation());
+	}
+				
+}
+
+void ASWeapon::OnRep_HitScanTrace()
+{
+	//playFX
+	PlayFiringEffects(HitScaneTrace.TraceEnd);
+
+	PlayImpactEffects(HitScaneTrace.SurfaceType, HitScaneTrace.TraceEnd);
+}
+
 // Called every frame
 void ASWeapon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
 
+
+void ASWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(ASWeapon, HitScaneTrace, COND_SkipOwner);
+	
+}

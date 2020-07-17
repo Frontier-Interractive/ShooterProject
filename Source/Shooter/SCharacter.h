@@ -101,12 +101,14 @@ protected:
 
 	int CurrentWeaponIndex;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = "Player")
 	ASWeapon* CurrentWeapon;
 
 	bool bIsSwappingWeapons;
 
 	FTimerHandle TimerHandle_Dash;
+	
+	FTimerHandle TimerHandle_Kill;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
 	float DashForce;
@@ -116,8 +118,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
 	UHealthComponent * HealthComp;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Player")
 	bool bIsAlive;
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "PlayerHud")
+	void UpdateHud(float CurrentHealth, float MaxHealth, int MaxAmmo, int AmmoRemaining);
 
 public:	
 	// Called every frame
@@ -126,9 +131,9 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	
-
 	virtual FVector GetPawnViewLocation() const override;
+
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
 
 private:
 

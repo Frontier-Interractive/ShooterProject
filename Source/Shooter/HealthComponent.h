@@ -31,15 +31,15 @@ protected:
 	float DefaultHealth;
 
 public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
-
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnHealthChanged OnHealthChanged;
+	
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
 
 	float GetHealth() {return Health;}
-	
 	float GetDefaultHealth() {return DefaultHealth;}
+
+	UFUNCTION(BlueprintCallable, Category="Health Component")
+	void Heal(float HealAmount);
 };

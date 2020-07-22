@@ -119,7 +119,7 @@ void UShooterGameInstance::OnStartOnlineGameComplete(FName SessionName, bool bWa
 	// If the start was successful, we can open a NewMap if we want. Make sure to use "listen" as a parameter!
 	if (bWasSuccessful)
 	{
-		UGameplayStatics::OpenLevel(GetWorld(), "TestMap", true, "listen");
+		UGameplayStatics::OpenLevel(GetWorld(), "TestMap", true, "?listen");
 	}
 }
 

@@ -96,8 +96,7 @@ void UShooterGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasS
 			}
 		}
 		
-	}
-	
+	}	
 }
 
 void UShooterGameInstance::OnStartOnlineGameComplete(FName SessionName, bool bWasSuccessful)
@@ -143,8 +142,8 @@ void UShooterGameInstance::FindSessions(TSharedPtr<const FUniqueNetId> UserId, b
 			SessionSearch = MakeShareable(new FOnlineSessionSearch());
 
 			SessionSearch->bIsLanQuery = bIsLAN;
-			SessionSearch->MaxSearchResults = 20;
-			SessionSearch->PingBucketSize = 50;
+			SessionSearch->MaxSearchResults = 200;
+			SessionSearch->PingBucketSize = 500;
 			
 			// We only want to set this Query Setting if "bIsPresence" is true
 			if (bIsPresence)

@@ -294,7 +294,7 @@ void UShooterGameInstance::OnDestroySessionComplete(FName SessionName, bool bWas
 			// If it was successful, we just load another level (could be a MainMenu!)
 			if (bWasSuccessful)
 			{
-				UGameplayStatics::OpenLevel(GetWorld(), "TestMap", true);
+				UGameplayStatics::OpenLevel(GetWorld(), "MainMenu", true);
 			}
 		}
 	}
@@ -306,7 +306,7 @@ void UShooterGameInstance::HostOnlineSession()
 
 	ULocalPlayer * const Player = GetFirstGamePlayer();
 
-	HostSession(Player->GetPreferredUniqueNetId().GetUniqueNetId(), GameSessionName, false, false, 6);
+	HostSession(Player->GetPreferredUniqueNetId().GetUniqueNetId(), GameSessionName, false, true, 6);
 	
 }
 
@@ -315,7 +315,7 @@ void UShooterGameInstance::FindOnlineSessions()
 	
 	ULocalPlayer * const Player = GetFirstGamePlayer();
 	
-	FindSessions(Player->GetPreferredUniqueNetId().GetUniqueNetId(), false, false);
+	FindSessions(Player->GetPreferredUniqueNetId().GetUniqueNetId(), false, true);
 	
 }
 

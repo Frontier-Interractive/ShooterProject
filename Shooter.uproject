@@ -19,16 +19,22 @@
 			"Enabled": true
 		},
 		{
-			"Name": "WebSocketNetworking",
-			"Enabled": true
-		},
-		{
 			"Name": "SteamShared",
 			"Enabled": true
 		},
 		{
 			"Name": "SteamSockets",
 			"Enabled": true
+		},
+		{
+			"Name": "SteamVR",
+			"Enabled": false,
+			"SupportedTargetPlatforms": [
+				"Win32",
+				"Win64",
+				"Linux",
+				"Mac"
+			]
 		}
 	]
 }

@@ -1,0 +1,1 @@
+"C:\Program Files\Epic Games\UE_4.24\Engine\Binaries\Win64\UE4Editor.exe" "P:\Projects\ShooterProject\Shooter.uproject" -game -log

@@ -135,5 +135,6 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Network")
 	void DestroyOnlineSession();
+
 	
 };

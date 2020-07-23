@@ -19,6 +19,7 @@ UShooterGameInstance::UShooterGameInstance(const FObjectInitializer& ObjectIniti
 	OnJoinSessionCompleteDelegate = FOnJoinSessionCompleteDelegate::CreateUObject(this, &UShooterGameInstance::OnJoinSessionComplete);
 
 	OnDestroySessionCompleteDelegate = FOnDestroySessionCompleteDelegate::CreateUObject(this, &UShooterGameInstance::OnDestroySessionComplete);
+
 }
 
 bool UShooterGameInstance::HostSession(TSharedPtr<const FUniqueNetId> UserId, FName SessionName, bool bIsLAN,
@@ -45,7 +46,7 @@ bool UShooterGameInstance::HostSession(TSharedPtr<const FUniqueNetId> UserId, FN
 			SessionSettings->bIsLANMatch = bIsLAN;
 			SessionSettings->bUsesPresence = bIsPresence;
 			SessionSettings->NumPublicConnections = MaxNumPlayers;
-			SessionSettings->NumPrivateConnections = 0;
+			SessionSettings->NumPrivateConnections = MaxNumPlayers;
 			SessionSettings->bAllowInvites = true;
 			SessionSettings->bAllowJoinInProgress = true;
 			SessionSettings->bShouldAdvertise = true;
@@ -187,6 +188,8 @@ void UShooterGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 			// Just debugging the Number of Search results. Can be displayed in UMG or something later on
 			GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("Num Search Results: %d"), SessionSearch->SearchResults.Num()));
 		
+	
+
 			// If we have found at least 1 session, we just going to debug them. You could add them to a list of UMG Widgets, like it is done in the BP version!
 			if (SessionSearch->SearchResults.Num() > 0)
 			{
@@ -303,7 +306,7 @@ void UShooterGameInstance::HostOnlineSession()
 
 	ULocalPlayer * const Player = GetFirstGamePlayer();
 
-	HostSession(Player->GetPreferredUniqueNetId().GetUniqueNetId(), GameSessionName, false, true, 6);
+	HostSession(Player->GetPreferredUniqueNetId().GetUniqueNetId(), GameSessionName, false, false, 6);
 	
 }
 
@@ -312,7 +315,7 @@ void UShooterGameInstance::FindOnlineSessions()
 	
 	ULocalPlayer * const Player = GetFirstGamePlayer();
 	
-	FindSessions(Player->GetPreferredUniqueNetId().GetUniqueNetId(), false, true);
+	FindSessions(Player->GetPreferredUniqueNetId().GetUniqueNetId(), false, false);
 	
 }
 

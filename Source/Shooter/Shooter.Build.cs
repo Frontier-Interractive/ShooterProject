@@ -22,7 +22,7 @@ public class Shooter : ModuleRules
         PrivateDependencyModuleNames.Add("OnlineSubsystem");
         PrivateDependencyModuleNames.Add("OnlineSubsystemUtils");
 
-        DynamicallyLoadedModuleNames.Add("OnlineSubsystemNull");
+        DynamicallyLoadedModuleNames.Add("OnlineSubsystemSteam");
 
         // To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
     }
